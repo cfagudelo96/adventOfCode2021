@@ -13,11 +13,6 @@ const (
 	windowSize = 3
 )
 
-type window struct {
-	sum         int
-	currentSize int
-}
-
 func main() {
 	if len(os.Args) != argsLength {
 		log.Fatal("Should provide just the input path as an argument")
@@ -67,38 +62,37 @@ func countMeasurementIncreases(inputPath string) (int, error) {
 }
 
 func countMeasurementIncreasesSlidingWindow(inputPath string, windowSize int) (int, error) {
-	windows := make([]window, 0)
+	var sums []int
 
 	file, err := os.Open(inputPath)
 	if err != nil {
 		return 0, fmt.Errorf("opening file: %w", err)
 	}
 
-	var c, initialWI, currentWI int
-
 	scanner := bufio.NewScanner(file)
 
+	var c, i int
+
 	for scanner.Scan() {
-		windows = append(windows, window{})
+		sums = append(sums, 0)
 
 		measurementI, err := parseInputLine(scanner.Text())
 		if err != nil {
 			return 0, err
 		}
 
-		for i := 0; i <= currentWI-initialWI; i++ {
-			windows[initialWI+i].sum += measurementI
-			windows[initialWI+i].currentSize++
-		}
-
-		if windows[initialWI].currentSize == windowSize {
-			if initialWI >= 1 && windows[initialWI].sum > windows[initialWI-1].sum {
-				c++
+		for j := 0; j < windowSize; j++ {
+			if i-j < 0 {
+				break
 			}
 
-			initialWI++
+			sums[i-j] += measurementI
 		}
-		currentWI++
+
+		if i >= windowSize && sums[i-windowSize+1] > sums[i-windowSize] {
+			c++
+		}
+		i++
 	}
 
 	return c, nil
