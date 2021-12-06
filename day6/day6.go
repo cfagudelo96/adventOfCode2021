@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	argsLength       = 2
-	initialFishState = 8
-	simulationDays   = 256
+	argsLength          = 2
+	initialFishState    = 8
+	resetFishState      = 6
+	simulationDaysPart1 = 80
+	simulationDaysPart2 = 256
 )
 
 func main() {
@@ -27,11 +29,19 @@ func main() {
 		log.Fatalf("Couldn't read the initial input: %v", err)
 	}
 
-	for i := 0; i < simulationDays; i++ {
-		fishes = simulateDay(fishes)
+	fishesStateMap := fishListToStateMap(fishes)
+
+	for i := 0; i < simulationDaysPart1; i++ {
+		simulateDayWithStateMap(fishesStateMap)
 	}
 
-	log.Printf("Number of fishes: %d", len(fishes))
+	log.Printf("Number of fishes p1: %d", countFishesFromStateMap(fishesStateMap))
+
+	for i := simulationDaysPart1; i < simulationDaysPart2; i++ {
+		simulateDayWithStateMap(fishesStateMap)
+	}
+
+	log.Printf("Number of fishes p2: %d", countFishesFromStateMap(fishesStateMap))
 }
 
 func parseInput(inputPath string) ([]int, error) {
@@ -59,6 +69,7 @@ func parseInput(inputPath string) ([]int, error) {
 	return fishes, nil
 }
 
+/* Previous naive implementation
 func simulateDay(fishes []int) []int {
 	newFishes := make([]int, len(fishes))
 
@@ -72,4 +83,37 @@ func simulateDay(fishes []int) []int {
 	}
 
 	return newFishes
+}
+*/
+
+func simulateDayWithStateMap(stateMap map[int]int) {
+	fishInState0 := stateMap[0]
+	previousStateCount := stateMap[0]
+
+	for i := initialFishState; i >= 0; i-- {
+		stateMap[i], previousStateCount = previousStateCount, stateMap[i]
+		if i == resetFishState {
+			stateMap[i] += fishInState0
+		}
+	}
+}
+
+func fishListToStateMap(fishes []int) map[int]int {
+	stateMap := make(map[int]int)
+
+	for _, fish := range fishes {
+		stateMap[fish]++
+	}
+
+	return stateMap
+}
+
+func countFishesFromStateMap(stateMap map[int]int) int {
+	var c int
+
+	for _, v := range stateMap {
+		c += v
+	}
+
+	return c
 }
